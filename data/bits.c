@@ -143,7 +143,7 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return (~(~(~x & y) & ~(x & ~y)));
+  return ~(~(~x & y) & ~(x & ~y));
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -165,7 +165,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+  return !(x + 1 + x + 1) & !!(~x ^ 0);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -176,7 +176,8 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+  int i = (0xAA) + (0xAA << 8) + (0xAA << 16) + (0xAA << 24);
+  return !(x & i ^ i) ;
 }
 /* 
  * negate - return -x 
@@ -186,7 +187,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
 //3
 /* 
@@ -199,7 +200,11 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+  /*dt1dr:
+   *((x -0x30) >= o) && ((0x39 - x) >= 0)
+   * "greater than or equal to zero" means: first_bit_of_x == 0
+   */
+  return !(x + ~(0x30) + 1 >> 31 | 0x39 + ~x + 1 >> 31);
 }
 /* 
  * conditional - same as x ? y : z 
@@ -209,7 +214,14 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  /* dt1dr :
+ * if x then y else z 
+ * return f1(y,x)+f2(z,x)
+ * when x != 0, f1(y, x) = y, f2 = 0
+ * when x = 0, f2(z, x) = z, f1 =0
+ * note that for int i, i^0 = i, i&(-1)=i
+ */
+  return (y ^ !x) & (~!!x + 1) | ((z ^ !!x) & (~!x + 1));
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -219,8 +231,8 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
-}
+  return !((y + ~x + 1)>>31);
+} 
 //4
 /* 
  * logicalNeg - implement the ! operator, using all of 
